@@ -106,7 +106,7 @@ export function createBookingService(deps: BookingServiceDeps) {
       logger.info({ bookingId: booking.id, workerId, requesterId }, 'Booking request created')
 
       await enqueueNotification({
-        userId: (booking as any).worker.userId,
+        userId: (booking as any).worker.curatorId,
         type: 'booking_request',
         title: 'New booking request',
         message: `${(booking as any).requester.firstName ?? 'A user'} has requested a booking on ${startTime.toUTCString()}.`,
@@ -148,7 +148,7 @@ export function createBookingService(deps: BookingServiceDeps) {
       if (!booking) throw new AppError('Booking not found', 404)
 
       const isRequester = (booking as any).requesterId === userId
-      const isWorker = (booking as any).worker.userId === userId
+      const isWorker = (booking as any).worker.curatorId === userId
       if (!isRequester && !isWorker) throw new AppError('Unauthorized', 403)
 
       if (['completed', 'cancelled'].includes((booking as any).status)) {
@@ -157,7 +157,7 @@ export function createBookingService(deps: BookingServiceDeps) {
 
       const updated = await repo.updateBooking(bookingId, { status: 'cancelled', cancellationReason: reason } as any)
 
-      const notifyUserId = isWorker ? (booking as any).requesterId : (booking as any).worker.userId
+      const notifyUserId = isWorker ? (booking as any).requesterId : (booking as any).worker.curatorId
       await enqueueNotification({
         userId: notifyUserId,
         type: 'booking_cancelled',

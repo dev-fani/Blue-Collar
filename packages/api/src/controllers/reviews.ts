@@ -55,13 +55,20 @@ export const moderateReview = catchAsync(async (req: Request, res: Response) => 
   })
   if (!review) throw new AppError('Review not found', 404)
 
-  const updated = action === 'approve'
+  const approving = action === 'approve'
+  const updated = approving
     ? await reviewService.approveReview(requireParam(req, 'id'))
     : await reviewService.rejectReview(requireParam(req, 'id'))
 
-  // Notify author
+  // Notify author. `updated.status` is the whole `ReviewStatus` enum; the
+  // moderation mail only speaks approved/rejected, which is what the branch
+  // above just applied.
   if (review.author.email) {
-    await sendModerationEmail(review.author.email, review.author.firstName, updated.status).catch(() => {})
+    await sendModerationEmail(
+      review.author.email,
+      review.author.firstName,
+      approving ? 'approved' : 'rejected',
+    ).catch(() => {})
   }
 
   res.json({ data: updated, status: 'success', message: `Review ${action}ed`, code: 200 })

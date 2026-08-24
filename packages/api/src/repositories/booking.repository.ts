@@ -1,4 +1,4 @@
-import type { Availability, Booking, Prisma } from '@prisma/client'
+import type { Availability, Booking, BookingStatus, Prisma } from '@prisma/client'
 import type { IRepository } from './base.repository.js'
 import { db } from '../db.js'
 
@@ -9,13 +9,19 @@ export interface BookingSlot {
   endTime: Date
 }
 
+/** Narrow a query-string `status` to a `BookingStatus`, ignoring anything else. */
+function asBookingStatus(status?: string): BookingStatus | undefined {
+  const values: BookingStatus[] = ['pending', 'confirmed', 'cancelled', 'completed']
+  return values.find((v) => v === status)
+}
+
 export interface IBookingRepository extends IRepository<Booking, Prisma.BookingCreateInput, Prisma.BookingUpdateInput> {
-  findWorkerById(id: string): Promise<{ id: string; userId: string } | null>
+  findWorkerById(id: string): Promise<{ id: string; curatorId: string } | null>
   findConflicting(workerId: string, startTime: Date, endTime: Date): Promise<BookingSlot[]>
   findAvailabilityByWorkerAndDay(workerId: string, dayOfWeek: number): Promise<Availability[]>
-  createBooking(data: Prisma.BookingUncheckedCreateInput): Promise<Booking & { worker: { userId: string }; requester: { id: string; firstName: string } }>
-  findBookingWithWorker(id: string): Promise<(Booking & { worker: { userId: string }; requester: { id: string; firstName: string } }) | null>
-  findBookingWithCancelInfo(id: string): Promise<(Booking & { worker: { userId: string } }) | null>
+  createBooking(data: Prisma.BookingUncheckedCreateInput): Promise<Booking & { worker: { curatorId: string }; requester: { id: string; firstName: string } }>
+  findBookingWithWorker(id: string): Promise<(Booking & { worker: { curatorId: string }; requester: { id: string; firstName: string } }) | null>
+  findBookingWithCancelInfo(id: string): Promise<(Booking & { worker: { curatorId: string } }) | null>
   updateBooking(id: string, data: Prisma.BookingUpdateInput): Promise<Booking>
   findWorkerBookings(workerId: string, opts: { page: number; limit: number; status?: string }): Promise<{ bookings: Booking[]; total: number; page: number; limit: number; totalPages: number }>
   findRequesterBookings(requesterId: string, opts: { page: number; limit: number; status?: string }): Promise<{ bookings: Booking[]; total: number; page: number; limit: number; totalPages: number }>
@@ -48,8 +54,8 @@ export class BookingRepository implements IBookingRepository {
     return db.booking.count({ where })
   }
 
-  async findWorkerById(id: string): Promise<{ id: string; userId: string } | null> {
-    return db.worker.findUnique({ where: { id }, select: { id: true, userId: true } })
+  async findWorkerById(id: string): Promise<{ id: string; curatorId: string } | null> {
+    return db.worker.findUnique({ where: { id }, select: { id: true, curatorId: true } })
   }
 
   async findConflicting(workerId: string, startTime: Date, endTime: Date): Promise<BookingSlot[]> {
@@ -71,7 +77,7 @@ export class BookingRepository implements IBookingRepository {
     return db.booking.create({
       data,
       include: {
-        worker: { select: { userId: true } },
+        worker: { select: { curatorId: true } },
         requester: { select: { id: true, firstName: true } },
       },
     })
@@ -81,7 +87,7 @@ export class BookingRepository implements IBookingRepository {
     return db.booking.findUnique({
       where: { id },
       include: {
-        worker: { select: { userId: true } },
+        worker: { select: { curatorId: true } },
         requester: { select: { id: true, firstName: true } },
       },
     })
@@ -90,7 +96,7 @@ export class BookingRepository implements IBookingRepository {
   async findBookingWithCancelInfo(id: string) {
     return db.booking.findUnique({
       where: { id },
-      include: { worker: { select: { userId: true } } },
+      include: { worker: { select: { curatorId: true } } },
     })
   }
 
@@ -104,7 +110,8 @@ export class BookingRepository implements IBookingRepository {
   ) {
     const { page, limit, status } = opts
     const skip = (page - 1) * limit
-    const where: Prisma.BookingWhereInput = { workerId, ...(status ? { status } : {}) }
+    const bookingStatus = asBookingStatus(status)
+    const where: Prisma.BookingWhereInput = { workerId, ...(bookingStatus ? { status: bookingStatus } : {}) }
 
     const [bookings, total] = await Promise.all([
       db.booking.findMany({
@@ -126,7 +133,8 @@ export class BookingRepository implements IBookingRepository {
   ) {
     const { page, limit, status } = opts
     const skip = (page - 1) * limit
-    const where: Prisma.BookingWhereInput = { requesterId, ...(status ? { status } : {}) }
+    const bookingStatus = asBookingStatus(status)
+    const where: Prisma.BookingWhereInput = { requesterId, ...(bookingStatus ? { status: bookingStatus } : {}) }
 
     const [bookings, total] = await Promise.all([
       db.booking.findMany({

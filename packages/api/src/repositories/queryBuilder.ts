@@ -11,19 +11,23 @@ export interface PaginationOpts {
 /**
  * Common filtering options
  */
-export interface FilterOpts {
-  where?: Prisma.UserWhereInput | Prisma.WorkerWhereInput
+export interface FilterOpts<TWhere = Prisma.WorkerWhereInput> {
+  where?: TWhere
 }
 
 /**
  * Common sorting options
  */
-export interface SortOpts {
-  orderBy?: Prisma.UserOrderByWithRelationInput | Prisma.WorkerOrderByWithRelationInput
+export interface SortOpts<TOrderBy = Prisma.WorkerOrderByWithRelationInput> {
+  orderBy?: TOrderBy
 }
 
 /**
- * Query builder for common Prisma patterns
+ * Query builder for common Prisma patterns.
+ *
+ * `filter`, `sort` and `buildQuery` are generic over the model's `WhereInput`
+ * and `OrderByWithRelationInput` so a caller gets back the shape its own
+ * delegate accepts; they default to `Worker`, the only model using them today.
  */
 export class QueryBuilder {
   /**
@@ -44,32 +48,35 @@ export class QueryBuilder {
   /**
    * Build sort order with validation
    */
-  static sort(
+  static sort<TOrderBy = Prisma.WorkerOrderByWithRelationInput>(
     sortBy?: string,
     sortOrder: 'asc' | 'desc' = 'desc',
-  ): Prisma.UserOrderByWithRelationInput | Prisma.WorkerOrderByWithRelationInput {
+  ): TOrderBy {
     const validFields = ['createdAt', 'updatedAt', 'name', 'rating']
     const field = sortBy && validFields.includes(sortBy) ? sortBy : 'createdAt'
-    return { [field]: sortOrder }
+    return { [field]: sortOrder } as TOrderBy
   }
 
   /**
    * Build filter with optional conditions
    */
-  static filter(conditions: Record<string, unknown> = {}): Prisma.UserWhereInput | Prisma.WorkerWhereInput {
+  static filter<TWhere = Prisma.WorkerWhereInput>(conditions: Record<string, unknown> = {}): TWhere {
     const where: Record<string, unknown> = {}
     Object.entries(conditions).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         where[key] = value
       }
     })
-    return where
+    return where as TWhere
   }
 
   /**
    * Build a complete query with pagination, filtering, and sorting
    */
-  static buildQuery(opts: {
+  static buildQuery<
+    TWhere = Prisma.WorkerWhereInput,
+    TOrderBy = Prisma.WorkerOrderByWithRelationInput,
+  >(opts: {
     pagination?: PaginationOpts
     filter?: Record<string, unknown>
     sort?: { field?: string; order?: 'asc' | 'desc' }
@@ -77,8 +84,8 @@ export class QueryBuilder {
     const { pagination = {}, filter = {}, sort = {} } = opts
     return {
       ...this.pagination(pagination),
-      where: this.filter(filter),
-      orderBy: this.sort(sort.field, sort.order),
+      where: this.filter<TWhere>(filter),
+      orderBy: this.sort<TOrderBy>(sort.field, sort.order),
     }
   }
 }

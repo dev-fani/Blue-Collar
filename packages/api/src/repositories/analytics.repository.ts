@@ -69,7 +69,9 @@ export async function getDisputeMetrics(filter: DateRangeFilter = {}) {
   const [total, resolved, pending] = await Promise.all([
     db.dispute.count({ where }),
     db.dispute.count({ where: { ...where, status: 'resolved' } }),
-    db.dispute.count({ where: { ...where, status: 'pending' } }),
+    // `pending` is not a DisputeStatus member (open | under_review | resolved
+    // | dismissed); count the disputes still awaiting an outcome.
+    db.dispute.count({ where: { ...where, status: { in: ['open', 'under_review'] } } }),
   ])
 
   const resolutionRate = total > 0 ? Math.round((resolved / total) * 100) : 0

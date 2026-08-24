@@ -64,7 +64,8 @@ export class ReviewRepository implements IReviewRepository {
   }
 
   async groupByRating(where: Prisma.ReviewWhereInput): Promise<{ rating: number; _count: { rating: number } }[]> {
-    return db.review.groupBy({ by: ['rating'], where, _count: { rating: true } })
+    const rows = await db.review.groupBy({ by: ['rating'], where, _count: { rating: true } })
+    return rows
   }
 
   async findWalletAddresses(userId: string, workerId: string) {
