@@ -50,6 +50,11 @@ model User {
   /// @encrypted — Critical token (Argon2id hash)
   verificationToken       String?
   verificationTokenExpiry DateTime?
+  /// Verification-reminder tracking (#314) — see
+  /// migrations/20260425_issue_314_email_reminders
+  reminderSentAt          DateTime?
+  reminderCount           Int                       @default(0)
+  unsubscribedReminders   Boolean                   @default(false)
   /// @encrypted — Critical token (Argon2id hash)
   resetToken              String?                   @unique
   resetTokenExpiry        DateTime?
@@ -204,16 +209,22 @@ model PushSubscription {
 }
 
 model Availability {
-  id        String   @id @default(cuid())
-  workerId  String
-  dayOfWeek Int // 0=Sun … 6=Sat
-  startTime String // "09:00"
-  endTime   String // "17:00"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  worker    Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  workerId    String
+  dayOfWeek   Int // 0=Sun … 6=Sat
+  startTime   String // "09:00"
+  endTime     String // "17:00"
+  /// IANA timezone the slot is expressed in (#321)
+  timezone    String   @default("UTC")
+  /// Whether the slot repeats every week (#321)
+  isRecurring Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  worker      Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
 
-  @@unique([workerId, dayOfWeek])
+  // Widened by 20260425_issue_321_availability_enhancements so a worker can
+  // hold several slots on the same day.
+  @@unique([workerId, dayOfWeek, startTime, endTime])
   @@index([workerId])
   @@index([workerId, dayOfWeek, startTime, endTime]) // covering index for availability filter
 }
@@ -916,4 +927,15 @@ model Device {
 
   @@index([userId])
   @@index([userId, revokedAt])
+}
+
+// ─── Global runtime configuration ────────────────────────────────────────────
+
+/// Key/value switches read at request time. Currently holds the `isPaused`
+/// kill-switch that `escrow.service` checks, mirroring the on-chain
+/// `require_not_paused` guard.
+model SystemConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }

@@ -104,10 +104,17 @@ export class MessagingRepository implements IMessagingRepository {
   }
 
   async searchMessages(conversationId: string, searchQuery: string): Promise<Message[]> {
+    // `body: { search }` needs Prisma's `fullTextSearch` preview feature, which
+    // this schema does not enable. Match any term instead, which is the same
+    // OR semantics the `a | b` tsquery above expressed.
+    const terms = searchQuery.split(' ').filter(Boolean)
+
     return db.message.findMany({
       where: {
         conversationId,
-        body: { search: searchQuery.split(' ').join(' | ') },
+        ...(terms.length > 0
+          ? { OR: terms.map((term) => ({ body: { contains: term, mode: 'insensitive' as const } })) }
+          : {}),
       },
       orderBy: { createdAt: 'desc' },
       take: 50,

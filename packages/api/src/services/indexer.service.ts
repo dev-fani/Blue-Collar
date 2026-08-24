@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client'
 import { db } from '../db.js'
 import { AppError } from '../utils/AppError.js'
 import { Gauge, Counter, Histogram } from 'prom-client'
@@ -31,8 +32,8 @@ interface ContractEventData {
   ledger: bigint
   txIndex: number
   eventIndex: number
-  indexed: Record<string, unknown>
-  data?: Record<string, unknown>
+  indexed: Prisma.InputJsonValue
+  data?: Prisma.InputJsonValue
 }
 
 /**

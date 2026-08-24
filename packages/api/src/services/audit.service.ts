@@ -7,7 +7,7 @@ export interface AuditOptions {
   action: string
   resource?: string
   resourceId?: string
-  meta?: Record<string, unknown>
+  meta?: Prisma.InputJsonValue
 }
 
 /** Write an audit log entry (fire-and-forget safe) */

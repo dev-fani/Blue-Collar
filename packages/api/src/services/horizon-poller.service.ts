@@ -5,6 +5,7 @@
  * Polls every POLL_INTERVAL_MS (default 30s). Uses database cursor to track
  * last processed ledger/transaction so restarts are safe and no events are missed.
  */
+import type { Prisma } from '@prisma/client'
 import { logger } from '../config/logger.js'
 import { publishEvent } from './webhook.service.js'
 import * as indexerService from './indexer.service.js'
@@ -86,7 +87,7 @@ async function fetchContractEvents(contractId: string): Promise<void> {
           txIndex,
           eventIndex,
           indexed: { topic: record.topic },
-          data: record.value as Record<string, unknown>,
+          data: record.value as Prisma.InputJsonValue,
         })
 
         // Publish to webhooks

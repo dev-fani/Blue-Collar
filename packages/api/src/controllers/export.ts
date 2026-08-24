@@ -9,8 +9,9 @@ import { db } from '../db.js'
 import { log } from '../services/audit.service.js'
 
 function toCSV(rows: Record<string, unknown>[]): string {
-  if (rows.length === 0) return ''
-  const headers = Object.keys(rows[0])
+  const first = rows[0]
+  if (!first) return ''
+  const headers = Object.keys(first)
   const escape = (v: unknown) => {
     const s = v == null ? '' : String(v)
     return s.includes(',') || s.includes('"') || s.includes('\n')
