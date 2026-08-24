@@ -155,16 +155,15 @@ export function updateRolloutConfig(
   version: string,
   updates: Partial<RolloutConfig>
 ): RolloutConfig | null {
-  if (!(version in ROLLOUT_CONFIG)) {
+  const existing = ROLLOUT_CONFIG[version]
+  if (!existing) {
     return null
   }
 
-  ROLLOUT_CONFIG[version] = {
-    ...ROLLOUT_CONFIG[version],
-    ...updates,
-  }
+  const updated: RolloutConfig = { ...existing, ...updates }
+  ROLLOUT_CONFIG[version] = updated
 
-  return ROLLOUT_CONFIG[version]
+  return updated
 }
 
 /**
@@ -266,6 +265,7 @@ export class GradualRollout {
     }
 
     const currentPhase = this.phases[this.currentPhaseIndex]
+    if (!currentPhase) return false
     const elapsed = Date.now() - this.phaseStartTime
 
     if (elapsed > currentPhase.durationMs) {

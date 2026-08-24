@@ -1,5 +1,5 @@
 import type { Request } from 'express'
-import { VERSION_CONFIG } from '../middleware/version.js'
+import { VERSION_CONFIG, isApiVersion } from '../middleware/version.js'
 
 /**
  * Utility functions for API versioning
@@ -16,7 +16,7 @@ export function getApiVersion(req: Request): string {
  * Check if a version is supported
  */
 export function isSupportedVersion(version: string): boolean {
-  return VERSION_CONFIG.supported.includes(version)
+  return isApiVersion(version)
 }
 
 /**

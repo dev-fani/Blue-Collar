@@ -77,8 +77,8 @@ export function createBookingService(deps: BookingServiceDeps) {
       const availability = await repo.findAvailabilityByWorkerAndDay(workerId, dayOfWeek)
 
       const coveredByAvailability = availability.some((avail) => {
-        const [ah, am] = avail.startTime.split(':').map(Number)
-        const [bh, bm] = avail.endTime.split(':').map(Number)
+        const [ah = 0, am = 0] = avail.startTime.split(':').map(Number)
+        const [bh = 0, bm = 0] = avail.endTime.split(':').map(Number)
         return slotStartMinutes >= ah * 60 + am && slotEndMinutes <= bh * 60 + bm
       })
 

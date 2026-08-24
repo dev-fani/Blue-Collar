@@ -33,6 +33,20 @@ export const VERSION_CONFIG = {
   },
 } as const
 
+/** A version string this API actually serves. */
+export type ApiVersion = (typeof VERSION_CONFIG.supported)[number]
+
+/**
+ * Narrow an arbitrary string to a supported API version.
+ *
+ * `VERSION_CONFIG` is declared `as const`, so `supported.includes(...)` only
+ * accepts the literal union; this widens the parameter for the callers that
+ * start from request-supplied strings.
+ */
+export function isApiVersion(value: string): value is ApiVersion {
+  return (VERSION_CONFIG.supported as readonly string[]).includes(value)
+}
+
 /**
  * Request extension for API version
  */
@@ -64,7 +78,7 @@ export function versionMiddleware(req: Request, res: Response, next: NextFunctio
   }
 
   // Validate version
-  if (!VERSION_CONFIG.supported.includes(version)) {
+  if (!isApiVersion(version)) {
     version = VERSION_CONFIG.current
   }
 
@@ -85,7 +99,7 @@ export function versionMiddleware(req: Request, res: Response, next: NextFunctio
  */
 function extractVersionFromPath(path: string): string | null {
   const match = path.match(/^\/api\/(v\d+)\//)
-  return match ? match[1] : null
+  return match?.[1] ?? null
 }
 
 /**
@@ -93,7 +107,7 @@ function extractVersionFromPath(path: string): string | null {
  */
 function extractVersionFromHeaders(req: Request): string | null {
   const acceptVersion = req.get('Accept-Version')
-  if (acceptVersion && VERSION_CONFIG.supported.includes(acceptVersion)) {
+  if (acceptVersion && isApiVersion(acceptVersion)) {
     return acceptVersion
   }
   return null

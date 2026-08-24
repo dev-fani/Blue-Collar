@@ -58,7 +58,7 @@ function shouldSendPush(prefs: NotificationPrefsView, type: string): boolean {
 
 function isDuplicate(dedupKey: string): boolean {
   const cached = deliveryCache.get(dedupKey)
-  if (cached && Date.now() - cached[0].sentAt.getTime() < DEDUP_WINDOW) {
+  if (cached?.[0] && Date.now() - cached[0].sentAt.getTime() < DEDUP_WINDOW) {
     return true
   }
   return false

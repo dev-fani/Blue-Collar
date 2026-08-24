@@ -42,7 +42,7 @@ export class PerformanceProfiler {
     const filename = path.join(PROFILE_DIR, `${name}-${Date.now()}.cpuprofile`);
 
     profile.export((error, result) => {
-      if (error) {
+      if (error || result === undefined) {
         console.error('Error exporting CPU profile:', error);
         return;
       }

@@ -16,7 +16,7 @@ export interface AvailabilitySlot {
 
 /** Convert "HH:MM" to minutes since midnight */
 function toMinutes(time: string): number {
-  const [h, m] = time.split(':').map(Number)
+  const [h = 0, m = 0] = time.split(':').map(Number)
   return h * 60 + m
 }
 
@@ -30,8 +30,10 @@ function detectConflicts(slots: AvailabilitySlot[]): string | null {
   for (const [day, daySlots] of byDay) {
     const sorted = [...daySlots].sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime))
     for (let i = 0; i < sorted.length - 1; i++) {
-      if (toMinutes(sorted[i].endTime) > toMinutes(sorted[i + 1].startTime)) {
-        return `Conflicting slots on day ${day}: ${sorted[i].startTime}-${sorted[i].endTime} overlaps ${sorted[i + 1].startTime}-${sorted[i + 1].endTime}`
+      const current = sorted[i]!
+      const next = sorted[i + 1]!
+      if (toMinutes(current.endTime) > toMinutes(next.startTime)) {
+        return `Conflicting slots on day ${day}: ${current.startTime}-${current.endTime} overlaps ${next.startTime}-${next.endTime}`
       }
     }
   }
