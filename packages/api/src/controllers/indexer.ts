@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import * as indexerService from '../services/indexer.service.js'
 import { catchAsync } from '../utils/catchAsync.js'
+import { requireParam } from '../utils/requireParam.js'
 
 /**
  * GET /api/events?contractId=...&eventName=...&limit=50&offset=0
@@ -36,7 +37,8 @@ export const queryEvents = catchAsync(async (req: Request, res: Response) => {
  * Get worker registration events by owner address
  */
 export const getWorkerRegistrations = catchAsync(async (req: Request, res: Response) => {
-  const { contractId, ownerAddress } = req.params
+  const contractId = requireParam(req, 'contractId')
+  const ownerAddress = requireParam(req, 'ownerAddress')
 
   const events = await indexerService.getWorkerRegistrationEvents(contractId, ownerAddress)
 
@@ -52,7 +54,7 @@ export const getWorkerRegistrations = catchAsync(async (req: Request, res: Respo
  * Get current indexer cursor position
  */
 export const getCursor = catchAsync(async (req: Request, res: Response) => {
-  const { contractId } = req.params
+  const contractId = requireParam(req, 'contractId')
 
   const cursor = await indexerService.getOrCreateCursor(contractId)
 

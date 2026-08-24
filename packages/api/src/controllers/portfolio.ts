@@ -11,7 +11,7 @@ export async function listPortfolio(req: Request, res: Response) {
 }
 
 export async function addPortfolioItem(req: Request, res: Response) {
-  const { workerId } = req.params
+  const workerId = requireParam(req, 'workerId')
   const worker = await db.worker.findUnique({ where: { id: workerId } })
   if (!worker) return res.status(404).json({ status: 'error', message: 'Worker not found', code: 404 })
 
@@ -26,7 +26,8 @@ export async function addPortfolioItem(req: Request, res: Response) {
 }
 
 export async function updatePortfolioItem(req: Request, res: Response) {
-  const { workerId, id } = req.params
+  const workerId = requireParam(req, 'workerId')
+  const id = requireParam(req, 'id')
   const existing = await db.portfolioItem.findFirst({ where: { id, workerId } })
   if (!existing) return res.status(404).json({ status: 'error', message: 'Not found', code: 404 })
 
@@ -45,7 +46,8 @@ export async function updatePortfolioItem(req: Request, res: Response) {
 }
 
 export async function deletePortfolioItem(req: Request, res: Response) {
-  const { workerId, id } = req.params
+  const workerId = requireParam(req, 'workerId')
+  const id = requireParam(req, 'id')
   const existing = await db.portfolioItem.findFirst({ where: { id, workerId } })
   if (!existing) return res.status(404).json({ status: 'error', message: 'Not found', code: 404 })
   await db.portfolioItem.delete({ where: { id } })

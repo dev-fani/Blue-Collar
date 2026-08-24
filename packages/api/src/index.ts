@@ -29,27 +29,10 @@ import { WebSocketServer } from './websocket/server.js'
 const app = express()
 const PORT = env.PORT || 3000
 
-app.disable('x-powered-by')
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'"],
-      imgSrc: ["'self'", 'data:'],
-      connectSrc,
-    },
-  },
-  hsts: {
-    maxAge: 31_536_000,
-    includeSubDomains: true,
-  },
-  frameguard: { action: 'deny' },
-  noSniff: true,
-}))
+// Security headers, CORS and the global rate limiter (see middleware/security.ts)
+applySecurity(app)
 
 app.use(compress())
-app.use(cors(corsConfig))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(pinoHttp())

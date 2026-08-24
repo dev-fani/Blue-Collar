@@ -2,7 +2,7 @@
  * Booking routes — Issue #776
  */
 import { Router } from 'express'
-import { authenticateJWT } from '../middleware/auth.js'
+import { authenticate } from '../middleware/auth.js'
 import { bookingRateLimit } from '../middleware/rateLimit.js'
 import {
   createBooking,
@@ -14,7 +14,7 @@ import {
 const router = Router()
 
 // All booking routes require authentication
-router.use(authenticateJWT)
+router.use(authenticate)
 
 /**
  * POST /bookings

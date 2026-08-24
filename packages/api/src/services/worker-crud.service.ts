@@ -81,6 +81,6 @@ export async function toggleWorker(id: string) {
 export async function getWorkerWithPortfolio(id: string) {
   return db.worker.findUnique({
     where: { id },
-    include: { category: true, portfolio: { orderBy: { order: 'asc' } } },
+    include: { category: true, portfolioItems: { orderBy: { order: 'asc' } } },
   })
 }

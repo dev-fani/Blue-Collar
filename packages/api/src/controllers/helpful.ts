@@ -1,8 +1,9 @@
 import type { Request, Response } from 'express'
 import { db } from '../db.js'
+import { requireParam } from '../utils/requireParam.js'
 
 export async function toggleHelpful(req: Request, res: Response) {
-  const { reviewId } = req.params
+  const reviewId = requireParam(req, 'reviewId')
   const userId = req.user!.id
 
   const existing = await db.reviewHelpful.findUnique({

@@ -18,7 +18,7 @@ export async function getSubscription(req: Request, res: Response) {
 }
 
 export async function createOrUpgradeSubscription(req: Request, res: Response) {
-  const { workerId } = req.params
+  const workerId = requireParam(req, 'workerId')
   const { tier, stripeCustomerId, stripeSubId, currentPeriodEnd } = req.body
 
   if (!tier || !['free', 'pro', 'premium'].includes(tier))

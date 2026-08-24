@@ -36,7 +36,9 @@ export function versionRateLimit(req: Request, res: Response, next: NextFunction
 
   const limiter = rateLimit({
     store: new RedisStore({
-      client: redis as any,
+      // rate-limit-redis v5 (the declared dependency) takes a raw command
+      // sender rather than a client instance, as v4 did.
+      sendCommand: (...args: string[]) => (redis as any).call(...args),
       prefix: `${key}:`,
     }),
     windowMs: config.windowMs,

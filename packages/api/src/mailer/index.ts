@@ -85,3 +85,28 @@ ${noteHtml}
 <p>Best regards,<br>BlueCollar Team</p>`,
   })
 }
+
+export async function sendVerificationReminderEmail(
+  to: string,
+  name: string,
+  token: string,
+  unsubscribeToken: string,
+) {
+  const html = render('verification-reminder.html', {
+    name,
+    verificationLink: `${APP_URL}/api/auth/verify-account?token=${token}`,
+    unsubscribeLink: `${APP_URL}/api/auth/unsubscribe-reminders?token=${unsubscribeToken}`,
+  })
+  await transporter.sendMail({ from: FROM, to, subject: 'Verify your BlueCollar email', html })
+}
+
+/**
+ * Generic sender for callers that build their own message body — the
+ * notification service and the email queue worker. The named `send*Email`
+ * helpers above are preferred where a template exists.
+ */
+export const mailer = {
+  async send(message: { to: string; subject: string; html: string; text?: string }) {
+    await transporter.sendMail({ from: FROM, ...message })
+  },
+}

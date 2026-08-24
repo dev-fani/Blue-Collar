@@ -7,7 +7,7 @@ import { catchAsync } from '../utils/catchAsync.js'
 import { requireParam } from '../utils/requireParam.js'
 
 export const listReviews = catchAsync(async (req: Request, res: Response) => {
-  const { workerId } = req.params
+  const workerId = requireParam(req, 'workerId')
   const page = Math.max(1, parseInt(req.query.page as string) || 1)
   const limit = Math.min(100, parseInt(req.query.limit as string) || 20)
   const filterRating = req.query.rating ? parseInt(req.query.rating as string) : undefined
@@ -17,7 +17,7 @@ export const listReviews = catchAsync(async (req: Request, res: Response) => {
 })
 
 export const createReview = catchAsync(async (req: Request, res: Response) => {
-  const { workerId } = req.params
+  const workerId = requireParam(req, 'workerId')
   const { rating, comment, transactionHash } = req.body
 
   const review = await reviewService.createReview(workerId, req.user!.id, rating, comment, transactionHash)

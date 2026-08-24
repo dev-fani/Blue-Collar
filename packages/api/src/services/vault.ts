@@ -1,7 +1,7 @@
-import * as NodeVault from 'node-vault';
+import NodeVault from 'node-vault';
 import { logger } from '../config/logger.js'
 
-const vault = new NodeVault({
+const vault = NodeVault({
   endpoint: process.env.VAULT_ADDR || 'http://localhost:8200',
   token: process.env.VAULT_TOKEN,
 });

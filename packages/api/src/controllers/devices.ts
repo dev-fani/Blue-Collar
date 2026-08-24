@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import * as deviceService from '../services/device.service.js'
 import { AppError } from '../services/AppError.js'
 import { catchAsync } from '../utils/catchAsync.js'
+import { requireParam } from '../utils/requireParam.js'
 
 /**
  * List all active devices for the authenticated user
@@ -17,7 +18,7 @@ export const listDevices = catchAsync(async (req: Request, res: Response) => {
  */
 export const revokeDevice = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user!.id
-  const { deviceId } = req.params
+  const deviceId = requireParam(req, 'deviceId')
   await deviceService.revokeDevice(deviceId, userId)
   res.json({ data: { success: true }, status: 'success', message: 'Device revoked' })
 })

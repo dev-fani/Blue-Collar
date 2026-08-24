@@ -23,7 +23,7 @@ function isPrismaError(err: unknown): err is PrismaClientKnownRequestError {
     err !== null &&
     'code' in err &&
     typeof (err as Record<string, unknown>).code === 'string' &&
-    (err as Record<string, unknown>).code?.toString().startsWith('P')
+    (err as Record<string, unknown>).code?.toString().startsWith('P') === true
   )
 }
 

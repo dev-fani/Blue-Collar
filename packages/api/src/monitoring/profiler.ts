@@ -1,4 +1,4 @@
-import profiler from 'v8-profiler-next';
+import v8Profiler from 'v8-profiler-next';
 import fs from 'fs';
 import path from 'path';
 import v8 from 'v8';
@@ -24,7 +24,7 @@ export class PerformanceProfiler {
       return;
     }
 
-    profiler.startProfiling(name, true);
+    v8Profiler.startProfiling(name, true);
     this.cpuProfileActive = true;
     console.log(`CPU profiling started: ${name}`);
   }
@@ -38,7 +38,7 @@ export class PerformanceProfiler {
       return;
     }
 
-    const profile = profiler.stopProfiling(name);
+    const profile = v8Profiler.stopProfiling(name);
     const filename = path.join(PROFILE_DIR, `${name}-${Date.now()}.cpuprofile`);
 
     profile.export((error, result) => {

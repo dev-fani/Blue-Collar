@@ -171,3 +171,128 @@ export const businessMetrics = {
 
 // Export register for custom metrics
 export const metricsRegister = register;
+
+// ── Business metrics ─────────────────────────────────────────────────────────
+// Domain counters and gauges driven by monitoring/business-metrics.ts, which
+// records events as they happen and re-syncs the gauges periodically.
+
+export const workerRegistrationsTotal = new client.Counter({
+  name: 'worker_registrations_total',
+  help: 'Total number of worker registrations',
+  labelNames: ['category', 'status'],
+  registers: [register],
+});
+
+export const activeWorkersGauge = new client.Gauge({
+  name: 'active_workers',
+  help: 'Number of workers currently marked active',
+  registers: [register],
+});
+
+export const tipsTotal = new client.Counter({
+  name: 'tips_total',
+  help: 'Total number of tips recorded',
+  labelNames: ['currency'],
+  registers: [register],
+});
+
+export const tipAmountTotal = new client.Counter({
+  name: 'tip_amount_total',
+  help: 'Cumulative tip amount, in the tip currency',
+  labelNames: ['currency'],
+  registers: [register],
+});
+
+export const tipAmountUsdTotal = new client.Counter({
+  name: 'tip_amount_usd_total',
+  help: 'Cumulative tip amount converted to USD',
+  labelNames: ['currency'],
+  registers: [register],
+});
+
+export const usersTotalGauge = new client.Gauge({
+  name: 'users_total',
+  help: 'Number of registered users',
+  labelNames: ['role'],
+  registers: [register],
+});
+
+export const usersVerifiedGauge = new client.Gauge({
+  name: 'users_verified',
+  help: 'Number of verified users',
+  labelNames: ['role'],
+  registers: [register],
+});
+
+export const reviewsTotal = new client.Counter({
+  name: 'reviews_total',
+  help: 'Total number of reviews created',
+  labelNames: ['category'],
+  registers: [register],
+});
+
+export const reviewRating = new client.Histogram({
+  name: 'review_rating',
+  help: 'Distribution of review ratings',
+  labelNames: ['category'],
+  buckets: [1, 2, 3, 4, 5],
+  registers: [register],
+});
+
+export const contractRegistrationsTotal = new client.Counter({
+  name: 'contract_registrations_total',
+  help: 'Total number of on-chain worker registration attempts',
+  labelNames: ['status'],
+  registers: [register],
+});
+
+export const contractTransactionsTotal = new client.Counter({
+  name: 'contract_transactions_total',
+  help: 'Total number of on-chain transactions',
+  labelNames: ['type', 'status'],
+  registers: [register],
+});
+
+export const contractTransactionGas = new client.Histogram({
+  name: 'contract_transaction_gas',
+  help: 'Gas consumed by on-chain transactions',
+  labelNames: ['type', 'status'],
+  buckets: [1e4, 1e5, 5e5, 1e6, 5e6, 1e7],
+  registers: [register],
+});
+
+export function recordWorkerRegistration(category: string, status: string) {
+  workerRegistrationsTotal.inc({ category, status });
+}
+
+export function setActiveWorkers(count: number) {
+  activeWorkersGauge.set(count);
+}
+
+export function recordTip(amount: number, currency = 'XLM', usdValue = 0) {
+  tipsTotal.inc({ currency });
+  tipAmountTotal.inc({ currency }, amount);
+  if (usdValue > 0) tipAmountUsdTotal.inc({ currency }, usdValue);
+}
+
+export function setUsersTotal(count: number, role = 'all') {
+  usersTotalGauge.set({ role }, count);
+}
+
+export function setUsersVerified(count: number, role = 'all') {
+  usersVerifiedGauge.set({ role }, count);
+}
+
+export function recordReview(rating: number, category = 'all') {
+  reviewsTotal.inc({ category });
+  reviewRating.observe({ category }, rating);
+}
+
+export function recordContractRegistration(status: string) {
+  contractRegistrationsTotal.inc({ status });
+}
+
+export function recordContractTransaction(type: string, status: string, gasUsed?: number) {
+  contractTransactionsTotal.inc({ type, status });
+  if (typeof gasUsed === 'number') contractTransactionGas.observe({ type, status }, gasUsed);
+}

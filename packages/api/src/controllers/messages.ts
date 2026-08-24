@@ -32,7 +32,7 @@ export const createConversation = catchAsync(async (req: AuthRequest, res: Respo
 })
 
 export const searchMessages = catchAsync(async (req: AuthRequest, res: Response) => {
-  const { conversationId } = req.params
+  const conversationId = requireParam(req, 'conversationId')
   const { q } = req.query
   const messages = await messagingService.searchMessages(
     conversationId,

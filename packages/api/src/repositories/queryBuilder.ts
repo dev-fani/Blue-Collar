@@ -49,7 +49,7 @@ export class QueryBuilder {
     sortOrder: 'asc' | 'desc' = 'desc',
   ): Prisma.UserOrderByWithRelationInput | Prisma.WorkerOrderByWithRelationInput {
     const validFields = ['createdAt', 'updatedAt', 'name', 'rating']
-    const field = validFields.includes(sortBy ?? '') ? sortBy : 'createdAt'
+    const field = sortBy && validFields.includes(sortBy) ? sortBy : 'createdAt'
     return { [field]: sortOrder }
   }
 
