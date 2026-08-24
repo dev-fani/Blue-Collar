@@ -1,10 +1,11 @@
 import type { Request, Response } from 'express'
 import * as availabilityService from '../services/availability.service.js'
 import { handleError } from '../utils/handleError.js'
+import { requireParam } from '../utils/requireParam.js'
 
 export async function getAvailability(req: Request, res: Response) {
   try {
-    const availability = await availabilityService.getAvailability(req.params.id)
+    const availability = await availabilityService.getAvailability(requireParam(req, 'id'))
     return res.json({ data: availability, status: 'success', code: 200 })
   } catch (err) {
     return handleError(res, err)
@@ -13,7 +14,7 @@ export async function getAvailability(req: Request, res: Response) {
 
 export async function upsertAvailability(req: Request, res: Response) {
   try {
-    const result = await availabilityService.upsertAvailability(req.params.id, req.body)
+    const result = await availabilityService.upsertAvailability(requireParam(req, 'id'), req.body)
     return res.json({ data: result, status: 'success', code: 200 })
   } catch (err) {
     return handleError(res, err)
@@ -22,7 +23,7 @@ export async function upsertAvailability(req: Request, res: Response) {
 
 export async function addAvailabilitySlot(req: Request, res: Response) {
   try {
-    const slot = await availabilityService.addAvailabilitySlot(req.params.id, req.body)
+    const slot = await availabilityService.addAvailabilitySlot(requireParam(req, 'id'), req.body)
     return res.status(201).json({ data: slot, status: 'success', code: 201 })
   } catch (err) {
     return handleError(res, err)
@@ -31,7 +32,7 @@ export async function addAvailabilitySlot(req: Request, res: Response) {
 
 export async function deleteAvailabilitySlot(req: Request, res: Response) {
   try {
-    await availabilityService.deleteAvailabilitySlot(req.params.id, req.params.slotId)
+    await availabilityService.deleteAvailabilitySlot(requireParam(req, 'id'), requireParam(req, 'slotId'))
     return res.status(204).send()
   } catch (err) {
     return handleError(res, err)

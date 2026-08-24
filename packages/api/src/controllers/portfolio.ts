@@ -1,9 +1,10 @@
 import type { Request, Response } from 'express'
 import { db } from '../db.js'
+import { requireParam } from '../utils/requireParam.js'
 
 export async function listPortfolio(req: Request, res: Response) {
   const items = await db.portfolioItem.findMany({
-    where: { workerId: req.params.workerId },
+    where: { workerId: requireParam(req, 'workerId') },
     orderBy: { order: 'asc' },
   })
   return res.json({ data: items, status: 'success', code: 200 })

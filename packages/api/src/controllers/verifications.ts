@@ -2,6 +2,7 @@ import type { Request, Response } from 'express'
 import * as verificationService from '../services/verification.service.js'
 import { handleError } from '../utils/handleError.js'
 import { ErrorMessages, HttpStatus } from '../constants/index.js'
+import { requireParam } from '../utils/requireParam.js'
 
 /** POST /api/verifications — submit a verification request */
 export async function requestVerification(req: Request, res: Response) {
@@ -35,7 +36,7 @@ export async function reviewRequest(req: Request, res: Response) {
     if (!status || !['approved', 'rejected'].includes(status)) {
       return res.status(HttpStatus.BAD_REQUEST).json({ status: 'error', message: ErrorMessages.VERIFICATION_STATUS_INVALID, code: HttpStatus.BAD_REQUEST })
     }
-    const result = await verificationService.reviewRequest(req.params.id, req.user!.id, status, reviewNote)
+    const result = await verificationService.reviewRequest(requireParam(req, 'id'), req.user!.id, status, reviewNote)
     return res.json({ data: result, status: 'success', code: 200 })
   } catch (err) {
     return handleError(res, err)
@@ -45,7 +46,7 @@ export async function reviewRequest(req: Request, res: Response) {
 /** GET /api/workers/:id/verifications — get verification history for a worker */
 export async function getWorkerVerifications(req: Request, res: Response) {
   try {
-    const data = await verificationService.getWorkerVerifications(req.params.id)
+    const data = await verificationService.getWorkerVerifications(requireParam(req, 'id'))
     return res.json({ data, status: 'success', code: 200 })
   } catch (err) {
     return handleError(res, err)

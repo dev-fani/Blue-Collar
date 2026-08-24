@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 import * as webhookService from '../services/webhook.service.js'
 import { handleError } from '../utils/handleError.js'
+import { requireParam } from '../utils/requireParam.js'
 
 const VALID_EVENTS = [
   'worker.created', 'worker.updated', 'worker.deleted',
@@ -35,7 +36,7 @@ export async function listSubscriptions(req: Request, res: Response) {
 
 export async function deleteSubscription(req: Request, res: Response) {
   try {
-    const result = await webhookService.deleteSubscription(req.params.id, req.user!.id)
+    const result = await webhookService.deleteSubscription(requireParam(req, 'id'), req.user!.id)
     if (!result) return res.status(404).json({ status: 'error', message: 'Subscription not found', code: 404 })
     return res.status(204).send()
   } catch (err) {
@@ -46,7 +47,7 @@ export async function deleteSubscription(req: Request, res: Response) {
 export async function getLogs(req: Request, res: Response) {
   try {
     const { page = '1', limit = '20' } = req.query
-    const result = await webhookService.getLogs(req.params.id, req.user!.id, Number(page), Number(limit))
+    const result = await webhookService.getLogs(requireParam(req, 'id'), req.user!.id, Number(page), Number(limit))
     if (!result) return res.status(404).json({ status: 'error', message: 'Subscription not found', code: 404 })
     return res.json({ ...result, status: 'success', code: 200 })
   } catch (err) {

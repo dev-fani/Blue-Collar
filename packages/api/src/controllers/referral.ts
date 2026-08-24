@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 import * as referralService from '../services/referral.service.js'
 import { handleError } from '../utils/handleError.js'
+import { requireParam } from '../utils/requireParam.js'
 
 export async function getMyReferralCode(req: Request, res: Response) {
   try {
@@ -42,7 +43,7 @@ export async function getLeaderboard(_req: Request, res: Response) {
 
 export async function rewardReferral(req: Request, res: Response) {
   try {
-    const referral = await referralService.rewardReferral(req.params.id)
+    const referral = await referralService.rewardReferral(requireParam(req, 'id'))
     return res.json({ data: referral, status: 'success', code: 200 })
   } catch (err) {
     return handleError(res, err)

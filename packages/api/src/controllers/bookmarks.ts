@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 import * as bookmarkService from '../services/bookmark.service.js'
 import { handleError } from '../utils/handleError.js'
+import { requireParam } from '../utils/requireParam.js'
 
 /**
  * POST /api/workers/:id/bookmark
@@ -8,7 +9,7 @@ import { handleError } from '../utils/handleError.js'
  */
 export async function toggleBookmark(req: Request, res: Response) {
   try {
-    const result = await bookmarkService.toggleBookmark(req.user!.id, req.params.id)
+    const result = await bookmarkService.toggleBookmark(req.user!.id, requireParam(req, 'id'))
     return res.json({ data: result, status: 'success', code: 200 })
   } catch (err) {
     return handleError(res, err)

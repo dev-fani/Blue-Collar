@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express'
 import { db } from '../db.js'
+import { requireParam } from '../utils/requireParam.js'
 
 // Tier feature gates
 const TIER_FEATURES: Record<string, string[]> = {
@@ -10,7 +11,7 @@ const TIER_FEATURES: Record<string, string[]> = {
 
 export async function getSubscription(req: Request, res: Response) {
   const sub = await db.subscription.findUnique({
-    where: { workerId: req.params.workerId },
+    where: { workerId: requireParam(req, 'workerId') },
   })
   if (!sub) return res.status(404).json({ status: 'error', message: 'No subscription found', code: 404 })
   return res.json({ data: { ...sub, features: TIER_FEATURES[sub.tier] }, status: 'success', code: 200 })
@@ -47,11 +48,11 @@ export async function createOrUpgradeSubscription(req: Request, res: Response) {
 }
 
 export async function cancelSubscription(req: Request, res: Response) {
-  const sub = await db.subscription.findUnique({ where: { workerId: req.params.workerId } })
+  const sub = await db.subscription.findUnique({ where: { workerId: requireParam(req, 'workerId') } })
   if (!sub) return res.status(404).json({ status: 'error', message: 'No subscription found', code: 404 })
 
   const updated = await db.subscription.update({
-    where: { workerId: req.params.workerId },
+    where: { workerId: requireParam(req, 'workerId') },
     data: { cancelAtPeriodEnd: true },
   })
   return res.json({ data: updated, status: 'success', code: 200 })

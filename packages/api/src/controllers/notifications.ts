@@ -3,6 +3,7 @@ import * as notificationService from '../services/notification.service.js'
 import { handleError } from '../utils/handleError.js'
 import { db } from '../db.js'
 import { catchAsync } from '../utils/catchAsync.js'
+import { requireParam } from '../utils/requireParam.js'
 
 interface AuthRequest extends Request {
   user?: { id: string }
@@ -43,12 +44,12 @@ export async function getUnreadCount(req: AuthRequest, res: Response) {
 
 export async function markRead(req: AuthRequest, res: Response) {
   try {
-    const notification = await db.notification.findUnique({ where: { id: req.params.id } })
+    const notification = await db.notification.findUnique({ where: { id: requireParam(req, 'id') } })
     if (!notification || notification.userId !== req.user!.id) {
       return res.status(404).json({ status: 'error', message: 'Not found' })
     }
     const updated = await db.notification.update({
-      where: { id: req.params.id },
+      where: { id: requireParam(req, 'id') },
       data: { read: true },
     })
     return res.json({ data: updated, status: 'success', code: 200 })
@@ -71,11 +72,11 @@ export async function markAllRead(req: AuthRequest, res: Response) {
 
 export async function deleteNotification(req: AuthRequest, res: Response) {
   try {
-    const notification = await db.notification.findUnique({ where: { id: req.params.id } })
+    const notification = await db.notification.findUnique({ where: { id: requireParam(req, 'id') } })
     if (!notification || notification.userId !== req.user!.id) {
       return res.status(404).json({ status: 'error', message: 'Not found' })
     }
-    await db.notification.delete({ where: { id: req.params.id } })
+    await db.notification.delete({ where: { id: requireParam(req, 'id') } })
     return res.status(204).send()
   } catch (err) {
     return handleError(res, err)
@@ -122,7 +123,7 @@ export const dispatchMultiChannel = catchAsync(async (req: AuthRequest, res: Res
 })
 
 export const getDeliveryLog = catchAsync(async (req: AuthRequest, res: Response) => {
-  const log = await notificationService.getDeliveryLog(req.params.notificationId)
+  const log = await notificationService.getDeliveryLog(requireParam(req, 'notificationId'))
   if (!log) {
     return res.status(404).json({ status: 'error', message: 'Not found' })
   }

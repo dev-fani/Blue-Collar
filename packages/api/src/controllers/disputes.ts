@@ -6,6 +6,7 @@
 import type { Request, Response } from 'express'
 import { catchAsync } from '../utils/catchAsync.js'
 import * as contractsService from '../services/contracts.service.js'
+import { requireParam } from '../utils/requireParam.js'
 
 /** POST /api/disputes — file a dispute against a worker */
 export const createDispute = catchAsync(async (req: Request, res: Response) => {
@@ -24,7 +25,7 @@ export const listDisputes = catchAsync(async (req: Request, res: Response) => {
 
 /** GET /api/disputes/:id — get a single dispute */
 export const getDispute = catchAsync(async (req: Request, res: Response) => {
-  const dispute = await contractsService.dispute.getDispute(req.params.id, req.user!.id, req.user!.role)
+  const dispute = await contractsService.dispute.getDispute(requireParam(req, 'id'), req.user!.id, req.user!.role)
   return res.json({ data: dispute, status: 'success', code: 200 })
 })
 
@@ -32,7 +33,7 @@ export const getDispute = catchAsync(async (req: Request, res: Response) => {
 export const resolveDispute = catchAsync(async (req: Request, res: Response) => {
   const { status, resolution } = req.body
   const dispute = await contractsService.dispute.resolveDispute(
-    req.params.id,
+    requireParam(req, 'id'),
     req.user!.id,
     status,
     resolution,

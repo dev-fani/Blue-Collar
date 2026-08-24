@@ -10,11 +10,12 @@ import {
 import { createReview as createReviewForWorker } from '../services/review.service.js'
 import { catchAsync } from '../utils/catchAsync.js'
 import { db } from '../db.js'
+import { requireParam } from '../utils/requireParam.js'
 
 const router = Router({ mergeParams: true })
 
 export async function listWorkerReviews(req: Request, res: Response) {
-  const workerId = req.params.workerId ?? req.params.id
+  const workerId = req.params.workerId ?? requireParam(req, 'id')
   const [reviews, aggregate] = await Promise.all([
     db.review.findMany({
       where: { workerId },
@@ -38,7 +39,7 @@ export async function listWorkerReviews(req: Request, res: Response) {
 }
 
 export const createWorkerReview = catchAsync(async (req: Request, res: Response) => {
-  const workerId = req.params.id ?? req.params.workerId
+  const workerId = req.params.id ?? requireParam(req, 'workerId')
   const { rating, comment, transactionHash } = req.body
   const review = await createReviewForWorker(workerId, req.user!.id, rating, comment, transactionHash)
   return res.status(201).json({
@@ -50,7 +51,7 @@ export const createWorkerReview = catchAsync(async (req: Request, res: Response)
 })
 
 export async function deleteReview(req: Request, res: Response) {
-  const id = req.params.id
+  const id = requireParam(req, 'id')
   if (!id) return res.status(400).json({ status: 'error', message: 'Missing review id', code: 400 })
 
   const review = await db.review.findUnique({ where: { id } })

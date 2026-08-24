@@ -4,6 +4,7 @@ import { sendModerationEmail } from '../mailer/index.js'
 import * as reviewService from '../services/review.service.js'
 import { AppError } from '../services/AppError.js'
 import { catchAsync } from '../utils/catchAsync.js'
+import { requireParam } from '../utils/requireParam.js'
 
 export const listReviews = catchAsync(async (req: Request, res: Response) => {
   const { workerId } = req.params
@@ -27,7 +28,7 @@ export const flagReview = catchAsync(async (req: Request, res: Response) => {
   const { reason } = req.body
   if (!reason) throw new AppError('reason is required', 400)
 
-  const review = await reviewService.flagReview(req.params.id, reason)
+  const review = await reviewService.flagReview(requireParam(req, 'id'), reason)
   res.json({ data: review, status: 'success', message: 'Review flagged', code: 200 })
 })
 
@@ -49,14 +50,14 @@ export const moderateReview = catchAsync(async (req: Request, res: Response) => 
     throw new AppError('action must be approve or reject', 400)
 
   const review = await db.review.findUnique({
-    where: { id: req.params.id },
+    where: { id: requireParam(req, 'id') },
     include: { author: true },
   })
   if (!review) throw new AppError('Review not found', 404)
 
   const updated = action === 'approve'
-    ? await reviewService.approveReview(req.params.id)
-    : await reviewService.rejectReview(req.params.id)
+    ? await reviewService.approveReview(requireParam(req, 'id'))
+    : await reviewService.rejectReview(requireParam(req, 'id'))
 
   // Notify author
   if (review.author.email) {
@@ -96,6 +97,6 @@ export const reportReview = catchAsync(async (req: Request, res: Response) => {
   const { reason } = req.body
   if (!reason) throw new AppError('reason is required', 400)
 
-  const review = await reviewService.flagReview(req.params.reviewId, reason)
+  const review = await reviewService.flagReview(requireParam(req, 'reviewId'), reason)
   res.json({ data: review, status: 'success', message: 'Review reported', code: 200 })
 })

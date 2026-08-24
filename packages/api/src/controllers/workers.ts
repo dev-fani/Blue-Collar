@@ -7,6 +7,7 @@ import { workerSerializer } from '../serializers/index.js'
 import type { CreateWorkerBody, UpdateWorkerBody } from '../interfaces/index.js'
 import { invalidateCachePattern } from '../middleware/cache.js'
 import { getWorkerReputation, syncReputationToDb } from '../services/stellar.service.js'
+import { requireParam } from '../utils/requireParam.js'
 
 // Parse a comma-separated ?fields= query param into a set for O(1) lookup.
 // An empty/absent param means "return all fields".
@@ -140,7 +141,7 @@ export async function listWorkers(req: Request, res: Response) {
  * @param res - JSON `{ data: Worker, status, code }` or 404.
  */
 export async function showWorker(req: Request, res: Response) {
-  const worker = await workerService.getWorkerWithPortfolio(req.params.id)
+  const worker = await workerService.getWorkerWithPortfolio(requireParam(req, 'id'))
   if (!worker) return res.status(404).json({ status: 'error', message: 'Not found', code: 404 })
   return res.json({ data: worker, status: 'success', code: 200 })
 }
@@ -190,8 +191,8 @@ export async function createWorker(req: Request<{}, {}, CreateWorkerBody>, res: 
  */
 export async function updateWorker(req: Request<{ id: string }, {}, UpdateWorkerBody>, res: Response) {
   try {
-    const worker = await workerService.updateWorkerWithMedia(req.params.id, req.body, req.file, req.user?.id)
-    await invalidateCachePattern(`cache:*workers/${req.params.id}*`)
+    const worker = await workerService.updateWorkerWithMedia(requireParam(req, 'id'), req.body, req.file, req.user?.id)
+    await invalidateCachePattern(`cache:*workers/${requireParam(req, 'id')}*`)
     await invalidateCachePattern(`cache:*workers?*`)
     return res.json({
       data: workerSerializer.serialize(worker as any),
@@ -212,8 +213,8 @@ export async function updateWorker(req: Request<{ id: string }, {}, UpdateWorker
  */
 export async function deleteWorker(req: Request, res: Response) {
   try {
-    await workerService.deleteWorkerWithMedia(req.params.id as string)
-    await invalidateCachePattern(`cache:*workers/${req.params.id}*`)
+    await workerService.deleteWorkerWithMedia(requireParam(req, 'id') as string)
+    await invalidateCachePattern(`cache:*workers/${requireParam(req, 'id')}*`)
     await invalidateCachePattern(`cache:*workers?*`)
     return res.status(204).send()
   } catch (err) {
@@ -230,8 +231,8 @@ export async function deleteWorker(req: Request, res: Response) {
  */
 export async function toggleActivation(req: Request, res: Response) {
   try {
-    const updated = await workerService.toggleWorker(req.params.id as string)
-    await invalidateCachePattern(`cache:*workers/${req.params.id}*`)
+    const updated = await workerService.toggleWorker(requireParam(req, 'id') as string)
+    await invalidateCachePattern(`cache:*workers/${requireParam(req, 'id')}*`)
     await invalidateCachePattern(`cache:*workers?*`)
     return res.json({
       data: workerSerializer.serialize(updated as any),
@@ -348,7 +349,7 @@ export const { searchWorkersHandler, advancedSearch } = createSearchHandlers()
  */
 export async function getReputation(req: Request, res: Response) {
   try {
-    const data = await getWorkerReputation(req.params.id)
+    const data = await getWorkerReputation(requireParam(req, 'id'))
     return res.json({ data, status: 'success', code: 200 })
   } catch (err) {
     return handleError(res, err)
@@ -374,7 +375,7 @@ export async function syncReputation(req: Request, res: Response) {
       reviewCount: number
       reputation: number
     }
-    const data = await syncReputationToDb(req.params.id, avgRating, reviewCount, reputation)
+    const data = await syncReputationToDb(requireParam(req, 'id'), avgRating, reviewCount, reputation)
     return res.json({ data, status: 'success', code: 200 })
   } catch (err) {
     return handleError(res, err)

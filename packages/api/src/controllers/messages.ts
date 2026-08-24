@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import * as messagingService from '../services/messaging.service.js'
 import { catchAsync } from '../utils/catchAsync.js'
+import { requireParam } from '../utils/requireParam.js'
 
 interface AuthRequest extends Request {
   user?: { id: string }
@@ -15,7 +16,7 @@ export const getConversations = catchAsync(async (req: AuthRequest, res: Respons
 
 export const getConversation = catchAsync(async (req: AuthRequest, res: Response) => {
   const conversation = await messagingService.getConversation(
-    req.params.conversationId,
+    requireParam(req, 'conversationId'),
     req.user!.id
   )
   res.json({ status: 'success', data: conversation })
@@ -42,12 +43,12 @@ export const searchMessages = catchAsync(async (req: AuthRequest, res: Response)
 })
 
 export const deleteMessage = catchAsync(async (req: AuthRequest, res: Response) => {
-  await messagingService.deleteMessage(req.params.messageId, req.user!.id)
+  await messagingService.deleteMessage(requireParam(req, 'messageId'), req.user!.id)
   res.json({ status: 'success', message: 'Message deleted' })
 })
 
 export const markAsRead = catchAsync(async (req: AuthRequest, res: Response) => {
-  await messagingService.markConversationAsRead(req.params.conversationId, req.user!.id)
+  await messagingService.markConversationAsRead(requireParam(req, 'conversationId'), req.user!.id)
   res.json({ status: 'success', message: 'Marked as read' })
 })
 

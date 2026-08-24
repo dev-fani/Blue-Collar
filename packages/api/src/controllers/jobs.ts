@@ -4,6 +4,7 @@ import { AppError, ErrorCode } from '../utils/AppError.js'
 import { ErrorMessages } from '../constants/errors.js'
 import * as jobService from '../services/job.service.js'
 import { validate } from '../middleware/validate.js'
+import { requireParam } from '../utils/requireParam.js'
 import {
   createJobSchema,
   updateJobSchema,
@@ -43,7 +44,7 @@ export function createJobsController(service: JobsService = jobService) {
     }),
 
     showJob: catchAsync(async (req: Request, res: Response) => {
-      const job = await service.getJob(req.params.id)
+      const job = await service.getJob(requireParam(req, 'id'))
       return res.json({ data: job, status: 'success', code: 200 })
     }),
 
@@ -53,24 +54,24 @@ export function createJobsController(service: JobsService = jobService) {
     }),
 
     updateJob: catchAsync(async (req: Request, res: Response) => {
-      const job = await service.updateJob(req.params.id, req.user!.id, req.body)
+      const job = await service.updateJob(requireParam(req, 'id'), req.user!.id, req.body)
       return res.json({ data: job, status: 'success', code: 200 })
     }),
 
     deleteJob: catchAsync(async (req: Request, res: Response) => {
-      await service.deleteJob(req.params.id, req.user!.id)
+      await service.deleteJob(requireParam(req, 'id'), req.user!.id)
       return res.status(204).send()
     }),
 
     renewJob: catchAsync(async (req: Request, res: Response) => {
       const days = req.body.days ? Number(req.body.days) : 30
-      const job = await service.renewJob(req.params.id, req.user!.id, days)
+      const job = await service.renewJob(requireParam(req, 'id'), req.user!.id, days)
       return res.json({ data: job, status: 'success', code: 200 })
     }),
 
     // ── Recommendations ─────────────────────────────────────────────────────────
     recommendedJobs: catchAsync(async (req: Request, res: Response) => {
-      const jobs = await service.recommendedJobs(req.params.workerId)
+      const jobs = await service.recommendedJobs(requireParam(req, 'workerId'))
       return res.json({ data: jobs, status: 'success', code: 200 })
     }),
 
@@ -95,19 +96,19 @@ export function createJobsController(service: JobsService = jobService) {
     // ── Applications ─────────────────────────────────────────────────────────────
     applyToJob: catchAsync(async (req: Request, res: Response) => {
       const { workerId, coverLetter, proposedRate } = req.body
-      const application = await service.applyToJob(req.params.id, String(workerId), coverLetter, proposedRate)
+      const application = await service.applyToJob(requireParam(req, 'id'), String(workerId), coverLetter, proposedRate)
       return res.status(201).json({ data: application, status: 'success', code: 201 })
     }),
 
     listApplications: catchAsync(async (req: Request, res: Response) => {
-      const applications = await service.listApplications(req.params.id, req.user!.id)
+      const applications = await service.listApplications(requireParam(req, 'id'), req.user!.id)
       return res.json({ data: applications, status: 'success', code: 200 })
     }),
 
     updateApplicationStatus: catchAsync(async (req: Request, res: Response) => {
       const application = await service.updateApplicationStatus(
-        req.params.id,
-        req.params.applicationId,
+        requireParam(req, 'id'),
+        requireParam(req, 'applicationId'),
         req.user!.id,
         req.body.status,
       )
@@ -119,19 +120,19 @@ export function createJobsController(service: JobsService = jobService) {
       if (!workerId) {
         throw new AppError(ErrorMessages.WORKER_ID_REQUIRED, 400, true, ErrorCode.VALIDATION_ERROR)
       }
-      const application = await service.withdrawApplication(req.params.id, String(workerId))
+      const application = await service.withdrawApplication(requireParam(req, 'id'), String(workerId))
       return res.json({ data: application, status: 'success', code: 200 })
     }),
 
     // ── Messaging ────────────────────────────────────────────────────────────────
     sendMessage: catchAsync(async (req: Request, res: Response) => {
       const { recipientId, body } = req.body
-      const message = await service.sendMessage(req.params.id, req.user!.id, recipientId, body)
+      const message = await service.sendMessage(requireParam(req, 'id'), req.user!.id, recipientId, body)
       return res.status(201).json({ data: message, status: 'success', code: 201 })
     }),
 
     listMessages: catchAsync(async (req: Request, res: Response) => {
-      const messages = await service.listMessages(req.params.id, req.user!.id)
+      const messages = await service.listMessages(requireParam(req, 'id'), req.user!.id)
       return res.json({ data: messages, status: 'success', code: 200 })
     }),
   }
