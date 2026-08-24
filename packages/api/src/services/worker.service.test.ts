@@ -556,7 +556,7 @@ describe('listWorkersGeo', () => {
 
 describe('getWorkerWithPortfolio', () => {
   it('returns the worker with its portfolio included', async () => {
-    const withPortfolio = { ...createMockWorker(), portfolio: [{ id: 'p1', order: 0 }] }
+    const withPortfolio = { ...createMockWorker(), portfolioItems: [{ id: 'p1', order: 0 }] }
     mockDb.worker.findUnique.mockResolvedValue(withPortfolio)
 
     const result = await workerService.getWorkerWithPortfolio('worker-1')
@@ -564,7 +564,7 @@ describe('getWorkerWithPortfolio', () => {
     expect(result).toEqual(withPortfolio)
     expect(mockDb.worker.findUnique).toHaveBeenCalledWith({
       where: { id: 'worker-1' },
-      include: { category: true, portfolio: { orderBy: { order: 'asc' } } },
+      include: { category: true, portfolioItems: { orderBy: { order: 'asc' } } },
     })
   })
 

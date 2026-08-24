@@ -33,6 +33,10 @@ vi.mock('../../db.js', () => ({
       update: vi.fn(),
       updateMany: vi.fn(),
     },
+    // resetPassword revokes every active session, devices included.
+    device: {
+      updateMany: vi.fn(),
+    },
   },
 }))
 
@@ -75,8 +79,20 @@ vi.mock('../../config/redis.js', () => ({
   cacheMetrics: { hits: 0, misses: 0 },
 }))
 
+// `strictAuthRateLimiter` is a module-level singleton shared by /login and
+// /forgot-password, so requests from earlier cases in this file exhaust its
+// 5-per-15-minutes budget before the later ones run. Throttling is covered by
+// its own suite; here it only needs to be out of the way.
+vi.mock('../../config/rateLimiter.js', () => ({
+  strictAuthRateLimiter: (_req: any, _res: any, next: any) => next(),
+  moderateAuthRateLimiter: (_req: any, _res: any, next: any) => next(),
+}))
+
 vi.mock('../../monitoring/tracing.js', () => ({
   initializeTracing: vi.fn(),
+  // error.serializer imports this too; without it the error handler itself
+  // throws and Express falls back to its default HTML 500 page.
+  getTraceId: vi.fn(() => undefined),
 }))
 
 vi.mock('../../services/reminder.service.js', () => ({
@@ -474,10 +490,12 @@ describe('PUT /api/auth/reset-password', () => {
 describe('PUT /api/auth/verify-account', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('returns 400 when token is missing', async () => {
+  it('returns 422 when token is missing', async () => {
     const res = await request(app).put('/api/auth/verify-account').send({})
 
-    expect(res.status).toBe(400)
+    // The route is behind `validate(verifyAccountRules)`, and the validation
+    // middleware answers 422 — as the forgot-password case above also asserts.
+    expect(res.status).toBe(422)
     expect(res.body.status).toBe('error')
   })
 
